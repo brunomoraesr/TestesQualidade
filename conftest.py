@@ -4,10 +4,6 @@ import pytest
 import requests
 from dotenv import load_dotenv
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.firefox.service import Service as FirefoxService
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.firefox import GeckoDriverManager
 
 load_dotenv()
 
@@ -53,22 +49,19 @@ def _build_chrome_driver(headless: bool) -> webdriver.Chrome:
         options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
     options.add_experimental_option("excludeSwitches", ["enable-logging"])
-    return webdriver.Chrome(
-        service=ChromeService(ChromeDriverManager().install()),
-        options=options,
-    )
+    # Selenium Manager (embutido no Selenium 4.6+) baixa o ChromeDriver correto
+    # automaticamente — sem dependência de webdriver-manager.
+    return webdriver.Chrome(options=options)
 
 
 def _build_firefox_driver(headless: bool) -> webdriver.Firefox:
     options = webdriver.FirefoxOptions()
     if headless:
         options.add_argument("--headless")
-    return webdriver.Firefox(
-        service=FirefoxService(GeckoDriverManager().install()),
-        options=options,
-    )
+    return webdriver.Firefox(options=options)
 
 
 @pytest.fixture(scope="function")
@@ -88,7 +81,10 @@ def driver(config):
         raise ValueError(f"Navegador não suportado: '{browser}'. Use 'chrome' ou 'firefox'.")
 
     drv = builders[browser]()
-    drv.implicitly_wait(config["implicit_wait"])
+    # implicitly_wait omitido intencionalmente: misturar com WebDriverWait(explicit)
+    # causa comportamento imprevisível em CI — cada poll interno do WebDriverWait
+    # usa find_element(), que com implicit wait bloqueia 15 s por retry.
+    # Todos os waits são explícitos via BasePage.
     yield drv
     drv.quit()
 

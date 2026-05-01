@@ -56,14 +56,17 @@ class InventoryPage(BasePage):
     def add_to_cart(self, product_name: str) -> "InventoryPage":
         """Adiciona um produto ao carrinho pelo nome exato exibido na página."""
         slug = self._slug(product_name)
-        locator = (By.CSS_SELECTOR, f"[data-test='add-to-cart-{slug}']")
-        self._click(locator)
+        self._click((By.CSS_SELECTOR, f"[data-test='add-to-cart-{slug}']"))
+        # Aguarda o botão mudar para "Remove", confirmando que o React terminou
+        # de atualizar o estado antes de qualquer ação subsequente.
+        self._find((By.CSS_SELECTOR, f"[data-test='remove-{slug}']"))
         return self
 
     def remove_from_cart(self, product_name: str) -> "InventoryPage":
         slug = self._slug(product_name)
-        locator = (By.CSS_SELECTOR, f"[data-test='remove-{slug}']")
-        self._click(locator)
+        self._click((By.CSS_SELECTOR, f"[data-test='remove-{slug}']"))
+        # Aguarda o botão voltar para "Add to cart", confirmando remoção.
+        self._find((By.CSS_SELECTOR, f"[data-test='add-to-cart-{slug}']"))
         return self
 
     def add_all_to_cart(self) -> "InventoryPage":

@@ -47,7 +47,9 @@ class BasePage:
     # ── Ações ──────────────────────────────────────────────────────────────────
 
     def _click(self, locator: Tuple[str, str]) -> None:
-        self._find_clickable(locator).click()
+        element = self._find_clickable(locator)
+        self._driver.execute_script("arguments[0].scrollIntoView({block:'center'});", element)
+        element.click()
 
     def _fill(self, locator: Tuple[str, str], text: str) -> None:
         element = self._find(locator)

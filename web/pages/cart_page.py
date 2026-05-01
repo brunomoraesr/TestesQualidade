@@ -2,6 +2,7 @@ from typing import List
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.webdriver.support import expected_conditions as EC
 
 from web.components.header import Header
 from web.pages.base_page import BasePage
@@ -71,6 +72,8 @@ class CartPage(BasePage):
         slug = product_name.lower().replace(" ", "-").replace("(", "").replace(")", "")
         locator = (By.CSS_SELECTOR, f"[data-test='remove-{slug}']")
         self._click(locator)
+        # Aguarda o botão de remoção sumir, confirmando que o React removeu o item.
+        self._wait.until(EC.invisibility_of_element_located(locator))
         return self
 
     def remove_all_items(self) -> "CartPage":
