@@ -88,3 +88,10 @@ inventory_page.py	_slug() converte nome do produto para o padrão data-test da A
 cart_page.py	item_prices retorna List[float] já sem o $ — pronto para assertions numéricas
 checkout_page.py	3 classes no mesmo arquivo por coesão de fluxo; fill_buyer_info() como método conveniente com encadeamento; total_matches_subtotal_plus_tax encapsula a validação matemática
 conftest.py	logged_in e cart_with_one_item são fixtures compostas que entregam estado pré-configurado aos testes
+
+PRINTS DE TESTES DENTRO DO TERMINAL :
+<img width="1236" height="604" alt="image" src="https://github.com/user-attachments/assets/1638dbf0-5d80-41fe-a6f5-a7046a7c7ee3" />
+PRINT DO RELATÓRIO HTML GERADO : 
+<img width="1896" height="945" alt="image" src="https://github.com/user-attachments/assets/ed729135-f4f5-4dbd-97b4-89d2448382ec" />
+
+
