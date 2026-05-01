@@ -1,0 +1,12 @@
+{
+  "valid_order": {
+    "id": 5,
+    "petId": 9000001,
+    "quantity": 1,
+    "shipDate": "2025-01-01T00:00:00.000Z",
+    "status": "placed",
+    "complete": false
+  },
+  "invalid_order_id": 999999,
+  "valid_order_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+}

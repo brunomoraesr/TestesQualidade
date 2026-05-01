@@ -1,1 +1,31 @@
-{}
+{
+  "valid_user": {
+    "id": 0,
+    "username": "john_doe_test",
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "password": "S3cur3P@ss!",
+    "phone": "+5511999990000",
+    "userStatus": 0
+  },
+  "updated_user": {
+    "id": 0,
+    "username": "john_doe_test",
+    "firstName": "John Updated",
+    "lastName": "Doe Updated",
+    "email": "john.updated@example.com",
+    "password": "N3wP@ss!",
+    "phone": "+5511888880000",
+    "userStatus": 0
+  },
+  "missing_username": {
+    "id": 0,
+    "firstName": "No",
+    "lastName": "Name",
+    "email": "noname@example.com",
+    "password": "pass",
+    "phone": "0000000000",
+    "userStatus": 0
+  }
+}

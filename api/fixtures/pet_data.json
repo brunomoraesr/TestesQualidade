@@ -1,1 +1,27 @@
-{}
+{
+  "valid_pet": {
+    "id": 9000001,
+    "category": { "id": 1, "name": "dogs" },
+    "name": "Bolt",
+    "photoUrls": ["https://example.com/bolt.jpg"],
+    "tags": [{ "id": 1, "name": "friendly" }],
+    "status": "available"
+  },
+  "updated_pet": {
+    "id": 9000001,
+    "category": { "id": 1, "name": "dogs" },
+    "name": "Bolt Updated",
+    "photoUrls": ["https://example.com/bolt_updated.jpg"],
+    "tags": [{ "id": 1, "name": "trained" }],
+    "status": "sold"
+  },
+  "pending_pet": {
+    "id": 9000002,
+    "category": { "id": 2, "name": "cats" },
+    "name": "Whiskers",
+    "photoUrls": ["https://example.com/whiskers.jpg"],
+    "tags": [],
+    "status": "pending"
+  },
+  "statuses": ["available", "pending", "sold"]
+}
