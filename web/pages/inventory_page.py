@@ -50,8 +50,10 @@ class InventoryPage(BasePage):
         return len(self._find_all(self._PRODUCT_ITEMS))
 
     def _slug(self, product_name: str) -> str:
-        """Converte nome do produto no slug usado pelos atributos data-test."""
-        return product_name.lower().replace(" ", "-").replace("(", "").replace(")", "")
+        """Converte nome do produto no slug usado pelos atributos data-test.
+        Mantém parênteses porque o SauceDemo os inclui no valor do data-test
+        (ex.: add-to-cart-test.allthethings()-t-shirt-(red))."""
+        return product_name.lower().replace(" ", "-")
 
     def add_to_cart(self, product_name: str) -> "InventoryPage":
         """Adiciona um produto ao carrinho pelo nome exato exibido na página."""
@@ -89,6 +91,13 @@ class InventoryPage(BasePage):
         (A→Z, Z→A, preço crescente, preço decrescente)
         """
         self._select_by_value(self._SORT_DROPDOWN, option)
+        return self
+
+    def wait_for_page_load(self) -> "InventoryPage":
+        """Aguarda a lista de produtos E o dropdown de ordenação ficarem visíveis,
+        garantindo que a página está completamente renderizada."""
+        self._find(self._PRODUCT_LIST)
+        self._find(self._SORT_DROPDOWN)
         return self
 
     # ── Verificações ───────────────────────────────────────────────────────────

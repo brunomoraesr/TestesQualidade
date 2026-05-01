@@ -66,7 +66,7 @@ def logged_in(driver, users):
     page.open()
     page.login(users["standard"]["username"], users["standard"]["password"])
     inventory = InventoryPage(driver)
-    inventory._find(inventory._PRODUCT_LIST)   # espera explícita pelo carregamento
+    inventory.wait_for_page_load()  # aguarda lista de produtos E sort dropdown
     return inventory
 
 
