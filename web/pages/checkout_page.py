@@ -60,8 +60,13 @@ class CheckoutStepOnePage(BasePage):
         )
 
     def click_continue(self) -> None:
+        """Clica em Continue e aguarda navegação para step-two OU exibição
+        de mensagem de erro — o que ocorrer primeiro."""
         self._click(self._CONTINUE_BUTTON)
-        self._wait_for_url_contains("checkout-step-two.html")
+        self._wait.until(
+            lambda d: "checkout-step-two.html" in d.current_url
+            or self._is_visible(self._ERROR_MESSAGE)
+        )
 
     def click_cancel(self) -> None:
         self._click(self._CANCEL_BUTTON)

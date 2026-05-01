@@ -59,11 +59,15 @@ def checkout_complete(driver):
 
 @pytest.fixture
 def logged_in(driver, users):
-    """Abre o browser já autenticado como standard_user."""
+    """Abre o browser já autenticado como standard_user.
+    Aguarda a lista de produtos ficar visível antes de retornar,
+    garantindo que a página carregou completamente."""
     page = LoginPage(driver)
     page.open()
     page.login(users["standard"]["username"], users["standard"]["password"])
-    return InventoryPage(driver)
+    inventory = InventoryPage(driver)
+    inventory._find(inventory._PRODUCT_LIST)   # espera explícita pelo carregamento
+    return inventory
 
 
 @pytest.fixture

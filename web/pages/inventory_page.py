@@ -67,8 +67,10 @@ class InventoryPage(BasePage):
         return self
 
     def add_all_to_cart(self) -> "InventoryPage":
-        for button in self._find_all(self._ADD_TO_CART_BUTTONS):
-            button.click()
+        """Adiciona produto por produto re-buscando o seletor a cada iteração
+        para evitar referências stale após mutação do DOM."""
+        for name in self.product_names:
+            self.add_to_cart(name)
         return self
 
     def open_product(self, product_name: str) -> None:

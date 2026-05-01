@@ -14,7 +14,7 @@ class BasePage:
     trabalhem apenas com ações e verificações de negócio.
     """
 
-    _TIMEOUT = 10
+    _TIMEOUT = 20  # 20s para absorver lentidão de runners de CI
 
     def __init__(self, driver: WebDriver) -> None:
         self._driver = driver
@@ -31,8 +31,11 @@ class BasePage:
         return self._wait.until(EC.element_to_be_clickable(locator))
 
     def _find_all(self, locator: Tuple[str, str]) -> List[WebElement]:
-        """Aguarda ao menos um elemento e retorna a lista completa."""
-        self._wait.until(EC.presence_of_all_elements_located(locator))
+        """Retorna todos os elementos encontrados; retorna [] se nenhum existir."""
+        try:
+            self._wait.until(EC.presence_of_element_located(locator))
+        except TimeoutException:
+            return []
         return self._driver.find_elements(*locator)
 
     def _is_visible(self, locator: Tuple[str, str]) -> bool:
