@@ -1,102 +1,273 @@
----Primeiro Commit v1 : Definição da Estrutura do Projeto---
-  --Definir Stack e criar estruturas das pastas 
-  --Decisões de design:
+# TestesQualidade
 
-Camada | ->	 Motivo
-clients/ separado dos tests/ ->	|Isola a lógica HTTP; testes ficam sem requests direto
-models/	->	| Centraliza a forma dos dados — facilita assertions e criação de payloads
-base_page.py	->	| Herança: todas as pages herdam métodos como wait_for_element, click, fill
-components/	| ->	  Elementos que aparecem em múltiplas páginas (header) ficam fora dos POs
-conftest.py por módulo	->	|  Fixtures de API não poluem o escopo Web e vice-versa
-shared/config.py->		|Única fonte de verdade para URLs e credenciais via .env
----------------------  ----------------------------------- -----------------------------------
+Projeto de automação de testes dividido em dois módulos independentes: testes de API REST para o Petstore e testes E2E Web para o SauceDemo. O objetivo é demonstrar boas práticas de QA com Python, cobrindo desde a camada de API até a interface do usuário, com integração contínua via GitHub Actions.
 
----Segundo Commit v2 : Configurações bases ( arquivos de configuração )---
+---
 
-requirements.txt — dependências exatas com versão pinada para reproducibilidade.
+## Índice
 
-pytest.ini
+- [Tecnologias](#tecnologias)
+- [Estrutura do projeto](#estrutura-do-projeto)
+- [Configuração do ambiente](#configuração-do-ambiente)
+- [Módulo de API — Petstore](#módulo-de-api--petstore)
+- [Módulo Web E2E — SauceDemo](#módulo-web-e2e--saucedemo)
+- [Executando os testes](#executando-os-testes)
+- [Relatórios](#relatórios)
+- [Pipeline CI/CD](#pipeline-cicd)
 
---html=reports/report.html --self-contained-html embutido no addopts para gerar relatório automaticamente em toda execução
-4 markers declarados: api, web, smoke, regression — evita o warning do pytest sobre markers desconhecidos
-conftest.py (raiz) — 3 fixtures + 1 hook:
+---
 
-Fixture	Escopo	Motivo
-config	session	Lê .env uma única vez; compartilhada por API e Web
-api_session	session	Reutiliza conexão TCP entre todos os testes de API
-driver	function	Browser novo por teste — garante isolamento de estado
-O builder do driver usa um dict de factories para suportar Chrome/Firefox sem if/elif espalhado
---headless=new para Chrome moderno (Chromium 112+); --headless para Firefox
-O hook pytest_configure injeta metadados no cabeçalho do relatório HTML
-.env.example — comentado, com valores padrão que funcionam sem alterar nada para iniciar.
+## Tecnologias
 
-.gitignore — inclui .venv/, .idea/, .vscode/ além dos artefatos de teste.
+- **Python 3.12**
+- **pytest 8.3.5** — runner de testes e gerenciamento de fixtures
+- **requests 2.32** — requisições HTTP para os testes de API
+- **selenium 4.27** — automação do browser para os testes E2E
+- **webdriver-manager 4.0** — download automático do ChromeDriver compatível com a versão instalada do Chrome
+- **pytest-html 4.1** — geração de relatórios HTML
+- **python-dotenv 1.0** — carregamento de variáveis de ambiente via arquivo `.env`
+- **faker 33.1** — geração de dados de teste
 
----------------------  ----------------------------------- -----------------------------------
----Terceiro Commit : Criação dos tesetes da API (Petstore ) de user pet e store---
-Estado final do módulo de API:
+---
 
+## Estrutura do projeto
 
-api/
-├── clients/
-│   └── petstore_client.py   ← PetstoreClient + PetClient + StoreClient + UserClient
-├── models/
-│   ├── pet.py               ← Pet + Category + Tag (dataclasses)
-│   ├── order.py             ← Order (dataclass)
-│   └── user.py              ← User (dataclass) — existente
-├── fixtures/
-│   ├── pet_data.json        ← valid_pet, updated_pet, pending_pet, statuses
-│   ├── order_data.json      ← valid_order, invalid_order_id, valid_order_ids
-│   └── user_data.json       ← existente
-├── conftest.py              ← pet_client, store_client, user_client, 3 fixtures de data
-└── tests/
-    ├── test_pet.py          ← 19 testes em 5 classes
-    ├── test_store.py        ← 18 testes em 4 classes
-    └── test_user.py         ← 18 testes em 6 classes — existente
-Destaques por módulo:
+```
+TestesQualidade/
+│
+├── api/                          # Módulo de testes de API REST (Petstore)
+│   ├── clients/
+│   │   └── petstore_client.py   # PetstoreClient (base) + PetClient + StoreClient + UserClient
+│   ├── models/
+│   │   ├── pet.py               # Dataclasses Pet, Category, Tag
+│   │   ├── order.py             # Dataclass Order
+│   │   └── user.py              # Dataclass User
+│   ├── fixtures/
+│   │   ├── pet_data.json        # Payloads de entrada para testes de Pet
+│   │   ├── order_data.json      # Payloads de entrada para testes de Store
+│   │   └── user_data.json       # Payloads de entrada para testes de User
+│   ├── tests/
+│   │   ├── test_pet.py          # 19 testes — CRUD /pet e findByStatus
+│   │   ├── test_store.py        # 18 testes — inventário e pedidos /store
+│   │   └── test_user.py         # 18 testes — CRUD /user, login e logout
+│   └── conftest.py              # Fixtures de API: pet_client, store_client, user_client
+│
+├── web/                          # Módulo de testes E2E Web (SauceDemo)
+│   ├── pages/                    # Page Object Model
+│   │   ├── base_page.py         # Classe base com métodos Selenium reutilizáveis
+│   │   ├── login_page.py        # PO da tela de login
+│   │   ├── inventory_page.py    # PO da listagem de produtos
+│   │   ├── cart_page.py         # PO do carrinho
+│   │   └── checkout_page.py     # CheckoutStepOnePage + CheckoutStepTwoPage + CheckoutCompletePage
+│   ├── components/
+│   │   └── header.py            # Componente do cabeçalho (menu e ícone do carrinho)
+│   ├── fixtures/
+│   │   └── users.json           # Credenciais e dados de checkout
+│   ├── tests/
+│   │   ├── test_login.py        # 10 testes — login válido, inválido e validações
+│   │   ├── test_inventory.py    # 14 testes — produtos, contador do carrinho e ordenação
+│   │   ├── test_cart.py         #  8 testes — conteúdo e ações do carrinho
+│   │   └── test_checkout.py     # 13 testes — fluxo completo e validações de formulário
+│   └── conftest.py              # Fixtures Web: page objects e estados pré-configurados
+│
+├── shared/                       # Código compartilhado entre módulos
+│   ├── config.py                 # Leitura de variáveis de ambiente
+│   └── utils/
+│       └── helpers.py            # Funções utilitárias
+│
+├── reports/                      # Relatórios HTML gerados pelo pytest-html
+│
+├── .github/
+│   └── workflows/
+│       └── tests.yml             # Pipeline GitHub Actions
+│
+├── conftest.py                   # Fixtures globais: config, api_session, driver
+├── pytest.ini                    # Configuração do pytest
+├── requirements.txt              # Dependências do projeto
+├── .env.example                  # Modelo de variáveis de ambiente
+└── .gitignore
+```
 
-test_pet.py
+---
 
-TestPetFindByStatus usa @pytest.mark.parametrize nos 3 status válidos — gera 9 testes automaticamente
-test_find_by_invalid_status_returns_400 valida rejeição de status desconhecido
-Teste de serialização do dataclass Pet valida Category e Tag como objetos tipados
-test_store.py
+## Configuração do ambiente
 
-TestStoreInventory verifica shape da resposta (dict com valores inteiros) sem depender de contagens específicas — a API é compartilhada e os números mudam
-test_get_valid_order_id_range aceita 200 ou 404 pois a API pública pode ou não ter o pedido
-test_get_order_id_above_10_returns_404 cobre a regra de negócio da spec: IDs válidos são apenas 1–10
+### Pré-requisitos
 
----Quarto Commit : Automação Web (SauceDemo) / Criação de Page Objects---
-Hierarquia de herança:
+- Python 3.12 ou superior
+- Google Chrome instalado
+- Git
 
+### Instalação
 
-BasePage
-├── LoginPage
-├── InventoryPage      (compõe Header)
-├── CartPage           (compõe Header)
-├── CheckoutStepOnePage (compõe Header)
-├── CheckoutStepTwoPage (compõe Header)
-├── CheckoutCompletePage
-└── Header             (herda BasePage para reuso dos métodos _find/_click)
-Decisões de design por arquivo:
+```bash
+# 1. Clone o repositório
+git clone https://github.com/seu-usuario/TestesQualidade.git
+cd TestesQualidade
 
-Arquivo	Decisão relevante
-base_page.py	_find usa visibility_of_element_located; _find_clickable usa element_to_be_clickable — esperas corretas para cada caso
-header.py	Componente separado, composto por cada página que o contém — não herança, composição
-login_page.py	Retorna self em cada setter para suportar encadeamento fluente
-inventory_page.py	_slug() converte nome do produto para o padrão data-test da API; sort_by() aceita 'az' | 'za' | 'lohi' | 'hilo'
-cart_page.py	item_prices retorna List[float] já sem o $ — pronto para assertions numéricas
-checkout_page.py	3 classes no mesmo arquivo por coesão de fluxo; fill_buyer_info() como método conveniente com encadeamento; total_matches_subtotal_plus_tax encapsula a validação matemática
-conftest.py	logged_in e cart_with_one_item são fixtures compostas que entregam estado pré-configurado aos testes
+# 2. Crie e ative o ambiente virtual
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+source .venv/bin/activate     # Linux / macOS
 
-PRINTS DE TESTES DE LOGIN DENTRO DO TERMINAL :
-<img width="1236" height="604" alt="image" src="https://github.com/user-attachments/assets/1638dbf0-5d80-41fe-a6f5-a7046a7c7ee3" />
-PRINT DO RELATÓRIO DE LOGIN HTML GERADO : 
-<img width="1896" height="945" alt="image" src="https://github.com/user-attachments/assets/ed729135-f4f5-4dbd-97b4-89d2448382ec" />
+# 3. Instale as dependências
+pip install -r requirements.txt
 
+# 4. Crie o arquivo de variáveis de ambiente
+copy .env.example .env        # Windows
+cp .env.example .env          # Linux / macOS
+```
 
--------------------------- ------------------------------- --------------------------------- -------------------------------
-QUINTO COMMIT : TESTES E2E ( CHROME ) USANDO AS PAGES OBJECTS CRIADAS NO QUARTO COMMIT
-<img width="1216" height="281" alt="image" src="https://github.com/user-attachments/assets/b360b47f-d944-4ca9-8db6-bab63095d3a2" />
-<img width="1912" height="728" alt="image" src="https://github.com/user-attachments/assets/758675d9-6b7d-461e-bb38-ed394d9e7c86" />
+### Variáveis de ambiente (`.env`)
 
+| Variável | Padrão | Descrição |
+|---|---|---|
+| `PETSTORE_BASE_URL` | `https://petstore.swagger.io/v2` | URL base da API Petstore |
+| `SAUCEDEMO_BASE_URL` | `https://www.saucedemo.com` | URL base do SauceDemo |
+| `SAUCEDEMO_USER` | `standard_user` | Usuário padrão |
+| `SAUCEDEMO_PASSWORD` | `secret_sauce` | Senha padrão |
+| `BROWSER` | `chrome` | Navegador (`chrome` ou `firefox`) |
+| `HEADLESS` | `false` | Execução sem janela (`true` para CI/CD) |
+| `IMPLICIT_WAIT` | `10` | Tempo máximo de espera implícita em segundos |
+
+---
+
+## Módulo de API — Petstore
+
+Testa a API pública `https://petstore.swagger.io/v2` nos recursos Pet, Store e User.
+
+### Arquitetura
+
+Os testes são organizados em três camadas. Na camada de **clientes HTTP**, a classe base `PetstoreClient` encapsula a biblioteca `requests` e centraliza a URL base e os headers. As subclasses `PetClient`, `StoreClient` e `UserClient` expõem métodos de negócio como `create()`, `get()`, `update()` e `delete()`, sem que os testes conheçam detalhes de transporte. Na camada de **modelos**, os dataclasses `Pet`, `Order` e `User` representam os contratos da API com métodos `to_dict()` e `from_dict()` para serialização. Na camada de **testes**, cada arquivo cobre um recurso com classes separadas por operação CRUD.
+
+### Cobertura dos endpoints
+
+**Pet (`/pet`)** — criar pet com payload válido, buscar por ID existente e inexistente, atualizar e verificar persistência, remover e confirmar ausência, e buscar por status `available`, `pending` e `sold` com `@pytest.mark.parametrize`.
+
+**Store (`/store`)** — validar shape da resposta do inventário (dict com valores inteiros), criar pedido e validar campos de retorno, buscar pedido por ID no range válido, remover pedido e confirmar ausência.
+
+**User (`/user`)** — criar usuário, buscar por username existente e inexistente, atualizar dados, remover usuário, autenticar e verificar headers `X-Rate-Limit` e `X-Expires-After`, encerrar sessão.
+
+### Nota sobre o Petstore público
+
+Por ser uma API de demonstração compartilhada, alguns comportamentos divergem da spec Swagger. Testes que cobrem essas divergências foram ajustados para refletir o comportamento real sem bloquear o CI.
+
+Endpoints que retornam 200 em vez de 400 ou 404 para entradas inválidas usam `assert response.status_code in (200, 400)` com comentário explicativo. Operações que a API aceita mas não persiste de fato, como PUT e DELETE de usuários, são marcadas com `@pytest.mark.xfail(strict=False)`, aparecendo como resultado laranja no relatório sem causar falha no pipeline.
+
+---
+
+## Módulo Web E2E — SauceDemo
+
+Testa o fluxo completo da loja `https://www.saucedemo.com/` com Selenium e o padrão **Page Object Model**.
+
+### Arquitetura — Page Object Model
+
+Cada tela da aplicação possui sua própria classe de Page Object, isolando os seletores CSS e as interações com o Selenium dos testes. Os testes conhecem apenas métodos de negócio como `login()`, `add_to_cart()` e `proceed_to_checkout()`.
+
+A classe `BasePage` é a raiz da hierarquia e centraliza os métodos de localização, ação e navegação. Todos os timeouts usam esperas explícitas via `WebDriverWait` de 20 segundos, evitando o uso de `time.sleep()`. O método `_find_all` retorna lista vazia em vez de lançar exceção quando nenhum elemento é encontrado, permitindo verificações de coleções vazias como carrinho vazio.
+
+O componente `Header` é reutilizado por composição nas páginas pós-login, encapsulando o badge contador do carrinho e o menu lateral com logout, reset de estado e navegação ao inventário.
+
+### Pages implementadas
+
+**LoginPage** — campos de usuário e senha, botão de login, mensagem de erro com botão de fechar, verificação de URL e estado da página.
+
+**InventoryPage** — listagem dos 6 produtos com nome e preço, botão de adicionar ou remover por produto via slug do `data-test`, adição de todos os produtos com re-busca de botões a cada iteração para evitar referências stale, e ordenação por nome e preço via `<select>`.
+
+**CartPage** — lista de itens com nome, preço e quantidade, remoção individual ou total, navegação para checkout e retorno ao inventário.
+
+**CheckoutStepOnePage** — formulário com first name, last name e ZIP code, botão Continue com espera inteligente que detecta tanto a navegação para o step dois quanto o aparecimento de mensagem de erro, botão Cancel.
+
+**CheckoutStepTwoPage** — resumo com itens, subtotal, imposto e total, propriedade `total_matches_subtotal_plus_tax` que valida a matemática, botões Finish e Cancel.
+
+**CheckoutCompletePage** — mensagem de confirmação, imagem de confirmação e botão Back Home.
+
+### Cenários de teste
+
+**Login (10 testes)** — login válido com redirecionamento confirmado, login inválido com verificação do texto da mensagem de erro, tentativa com usuário bloqueado, envio com campos vazios para validação de obrigatoriedade, e fechamento da mensagem de erro pelo botão X.
+
+**Inventário e contador do carrinho (14 testes)** — carga dos 6 produtos com nomes e preços não vazios, ausência do badge antes de adicionar itens, incremento correto do badge de 0 a 6, decremento ao remover, desaparecimento ao remover o único item, e os quatro modos de ordenação verificados com `sorted()` nativo do Python.
+
+**Carrinho (8 testes)** — item adicionado aparece com preço e quantidade corretos, dois produtos diferentes presentes, remoção de 1 item para esvaziar, remoção de 1 de 2 itens mantendo o outro, e retorno ao inventário pelo Continue Shopping.
+
+**Checkout (13 testes)** — o teste principal percorre o fluxo completo do login até a mensagem "Thank you for your order!" com verificação em cada transição de página. Os demais testes cobrem a validação dos três campos obrigatórios do formulário, a matemática do total, o cancelamento no step dois e a navegação de retorno ao inventário após a confirmação.
+
+### Fixtures de estado pré-configurado
+
+A fixture `logged_in` abre o browser, realiza o login e aguarda explicitamente o carregamento completo da lista de produtos antes de retornar o `InventoryPage`. A fixture `cart_with_one_item` herda de `logged_in` e entrega um `CartPage` já com o Sauce Labs Backpack adicionado. Ambas têm escopo `function`, garantindo isolamento total entre os testes com um browser zerado por teste.
+
+---
+
+## Executando os testes
+
+```bash
+# Todos os testes
+pytest
+
+# Por módulo
+pytest api/tests/ -v
+pytest web/tests/ -v
+
+# Por arquivo
+pytest api/tests/test_pet.py -v
+pytest web/tests/test_checkout.py -v
+
+# Por marker
+pytest -m api -v
+pytest -m web -v
+pytest -m smoke -v
+
+# Somente o fluxo completo de compra
+pytest web/tests/test_checkout.py::TestCompleteCheckoutFlow::test_full_purchase_flow_confirmation_message -v
+
+# Modo headless
+HEADLESS=true pytest web/tests/ -v
+```
+
+---
+
+## Relatórios
+
+O `pytest-html` gera automaticamente um relatório HTML ao final de cada execução, salvo em `reports/report.html`.
+
+```bash
+# Abrir no Windows
+start reports\report.html
+```
+
+O relatório exibe resultado por teste (passed, failed, xfail), tempo de execução individual, logs capturados e traceback completo em caso de falha. Os resultados são ordenados com falhas primeiro e podem ser filtrados por tipo na interface.
+
+---
+
+## Pipeline CI/CD
+
+O arquivo `.github/workflows/tests.yml` executa os testes automaticamente a cada push ou pull request para a branch `main`.
+
+### Jobs
+
+Dois jobs rodam em paralelo de forma independente — a falha em um não cancela o outro.
+
+**API — Petstore** executa em `ubuntu-latest` com timeout de 15 minutos. Instala Python 3.12 com cache do pip, instala as dependências e roda os testes de API, salvando o relatório `api-test-report` como artefato mesmo em caso de falha (`if: always()`).
+
+**Web E2E — SauceDemo (headless)** executa em `ubuntu-latest` com timeout de 30 minutos. Instala o Chrome via `browser-actions/setup-chrome`, roda os testes com `HEADLESS=true` e `IMPLICIT_WAIT=15` para compensar a latência de runners compartilhados, e salva o relatório `web-test-report` como artefato. Um terceiro artefato com screenshots de falha é gerado condicionalmente com `if: failure()`.
+
+### Artefatos
+
+Após cada run, os relatórios ficam disponíveis para download na aba **Actions** do repositório, na seção **Artifacts**, retidos por 14 dias.
+
+Nenhuma variável secreta é necessária — o Petstore e o SauceDemo são serviços públicos com credenciais padrão documentadas.
+
+---
+
+## Contagem de testes
+
+| Módulo | Arquivo | Testes |
+|---|---|---|
+| API | test_pet.py | 19 |
+| API | test_store.py | 18 |
+| API | test_user.py | 18 |
+| Web | test_login.py | 10 |
+| Web | test_inventory.py | 14 |
+| Web | test_cart.py | 8 |
+| Web | test_checkout.py | 13 |
+| **Total** | | **100** |
