@@ -1,0 +1,14 @@
+# API
+requests==2.32.3
+pytest==8.3.5
+
+# Web
+selenium==4.27.1
+webdriver-manager==4.0.2
+
+# Relatórios
+pytest-html==4.1.1
+
+# Utilitários
+python-dotenv==1.0.1
+faker==33.1.0
