@@ -90,14 +90,13 @@ class InventoryPage(BasePage):
         Opções válidas: 'az' | 'za' | 'lohi' | 'hilo'
         (A→Z, Z→A, preço crescente, preço decrescente)
         """
+        self._find(self._SORT_DROPDOWN)
         self._select_by_value(self._SORT_DROPDOWN, option)
         return self
 
     def wait_for_page_load(self) -> "InventoryPage":
-        """Aguarda a lista de produtos E o dropdown de ordenação ficarem visíveis,
-        garantindo que a página está completamente renderizada."""
+        """Aguarda a lista de produtos ficar visível."""
         self._find(self._PRODUCT_LIST)
-        self._find(self._SORT_DROPDOWN)
         return self
 
     # ── Verificações ───────────────────────────────────────────────────────────

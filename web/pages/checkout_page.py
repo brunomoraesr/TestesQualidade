@@ -65,7 +65,7 @@ class CheckoutStepOnePage(BasePage):
         self._click(self._CONTINUE_BUTTON)
         self._wait.until(
             lambda d: "checkout-step-two.html" in d.current_url
-            or self._is_visible(self._ERROR_MESSAGE)
+            or bool(d.find_elements(*self._ERROR_MESSAGE))
         )
 
     def click_cancel(self) -> None:
