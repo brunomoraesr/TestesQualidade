@@ -35,13 +35,11 @@ class CartPage(BasePage):
         return self
 
     def proceed_to_checkout(self) -> None:
-        element = self._find_clickable(self._CHECKOUT_BUTTON)
-        self._driver.execute_script("arguments[0].click();", element)
+        self._click(self._CHECKOUT_BUTTON)
         self._wait_for_url_contains("checkout-step-one.html")
 
     def continue_shopping(self) -> None:
-        element = self._find_clickable(self._CONTINUE_SHOPPING)
-        self._driver.execute_script("arguments[0].click();", element)
+        self._click(self._CONTINUE_SHOPPING)
         self._wait_for_url_contains("inventory.html")
 
     # ── Itens do carrinho ──────────────────────────────────────────────────────

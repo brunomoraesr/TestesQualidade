@@ -25,8 +25,7 @@ class Header(BasePage):
     # ── Carrinho ───────────────────────────────────────────────────────────────
 
     def go_to_cart(self) -> None:
-        element = self._find_clickable(self._CART_ICON)
-        self._driver.execute_script("arguments[0].click();", element)
+        self._click(self._CART_ICON)
         self._wait_for_url_contains("cart.html")
 
     @property

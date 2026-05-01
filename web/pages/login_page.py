@@ -44,6 +44,11 @@ class LoginPage(BasePage):
         self.enter_username(username)
         self.enter_password(password)
         self.click_login()
+        # JS click doesn't block on navigation; wait for either success or error.
+        self._wait.until(
+            lambda d: "inventory.html" in d.current_url
+            or self._is_visible(self._ERROR_MESSAGE)
+        )
 
     def dismiss_error(self) -> "LoginPage":
         self._click(self._ERROR_BUTTON)
