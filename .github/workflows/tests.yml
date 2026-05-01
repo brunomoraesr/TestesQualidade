@@ -1,0 +1,114 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+defaults:
+  run:
+    shell: bash
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Os dois jobs rodam em paralelo: falha em um não cancela o outro.
+# Cada job sobe seu próprio relatório HTML como artefato.
+# ─────────────────────────────────────────────────────────────────────────────
+
+jobs:
+
+  # ── 1. Testes de API (Petstore) ────────────────────────────────────────────
+  api-tests:
+    name: "API — Petstore"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Criar diretório de relatórios
+        run: mkdir -p reports
+
+      - name: Executar testes de API
+        run: |
+          pytest api/tests/ \
+            -v \
+            --tb=short \
+            --html=reports/api-report.html \
+            --self-contained-html
+
+      - name: Publicar relatório de API
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-report
+          path: reports/api-report.html
+          retention-days: 14
+
+  # ── 2. Testes E2E Web (SauceDemo) — headless ──────────────────────────────
+  web-tests:
+    name: "Web E2E — SauceDemo (headless)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      BROWSER: "chrome"
+      HEADLESS: "true"
+      IMPLICIT_WAIT: "15"   # runners de CI costumam ser mais lentos
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Instalar Google Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Verificar versão do Chrome instalada
+        run: google-chrome --version
+
+      - name: Criar diretório de relatórios
+        run: mkdir -p reports
+
+      - name: Executar testes Web E2E
+        run: |
+          pytest web/tests/ \
+            -v \
+            --tb=short \
+            --html=reports/web-report.html \
+            --self-contained-html
+
+      - name: Publicar relatório Web
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-test-report
+          path: reports/web-report.html
+          retention-days: 14
+
+      - name: Publicar screenshots de falha (se existirem)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-falha
+          path: reports/screenshots/
+          if-no-files-found: ignore
+          retention-days: 7
