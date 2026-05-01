@@ -33,3 +33,35 @@ O hook pytest_configure injeta metadados no cabeçalho do relatório HTML
 .gitignore — inclui .venv/, .idea/, .vscode/ além dos artefatos de teste.
 
 ---------------------  ----------------------------------- -----------------------------------
+---Terceiro Commit : Criação dos tesetes da API (Petstore ) de user pet e store---
+Estado final do módulo de API:
+
+
+api/
+├── clients/
+│   └── petstore_client.py   ← PetstoreClient + PetClient + StoreClient + UserClient
+├── models/
+│   ├── pet.py               ← Pet + Category + Tag (dataclasses)
+│   ├── order.py             ← Order (dataclass)
+│   └── user.py              ← User (dataclass) — existente
+├── fixtures/
+│   ├── pet_data.json        ← valid_pet, updated_pet, pending_pet, statuses
+│   ├── order_data.json      ← valid_order, invalid_order_id, valid_order_ids
+│   └── user_data.json       ← existente
+├── conftest.py              ← pet_client, store_client, user_client, 3 fixtures de data
+└── tests/
+    ├── test_pet.py          ← 19 testes em 5 classes
+    ├── test_store.py        ← 18 testes em 4 classes
+    └── test_user.py         ← 18 testes em 6 classes — existente
+Destaques por módulo:
+
+test_pet.py
+
+TestPetFindByStatus usa @pytest.mark.parametrize nos 3 status válidos — gera 9 testes automaticamente
+test_find_by_invalid_status_returns_400 valida rejeição de status desconhecido
+Teste de serialização do dataclass Pet valida Category e Tag como objetos tipados
+test_store.py
+
+TestStoreInventory verifica shape da resposta (dict com valores inteiros) sem depender de contagens específicas — a API é compartilhada e os números mudam
+test_get_valid_order_id_range aceita 200 ou 404 pois a API pública pode ou não ter o pedido
+test_get_order_id_above_10_returns_404 cobre a regra de negócio da spec: IDs válidos são apenas 1–10
