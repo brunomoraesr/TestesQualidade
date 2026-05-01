@@ -1,13 +1,13 @@
-# API
-requests==2.32.3
+# Testes e runner
 pytest==8.3.5
+pytest-html==4.1.1
 
-# Web
+# API REST
+requests==2.32.3
+
+# Web / Selenium
 selenium==4.27.1
 webdriver-manager==4.0.2
-
-# Relatórios
-pytest-html==4.1.1
 
 # Utilitários
 python-dotenv==1.0.1

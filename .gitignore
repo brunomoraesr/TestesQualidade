@@ -1,6 +1,33 @@
+# Variáveis de ambiente reais (nunca versionar)
 .env
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# pytest
 .pytest_cache/
+.cache/
+
+# Relatórios gerados (artefatos de build)
 reports/*.html
 reports/*.xml
+reports/*.json
+
+# Distribuição / empacotamento
+dist/
+build/
+*.egg-info/
+
+# IDEs
+.vscode/
+.idea/
+*.iml
