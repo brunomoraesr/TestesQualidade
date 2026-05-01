@@ -65,3 +65,26 @@ test_store.py
 TestStoreInventory verifica shape da resposta (dict com valores inteiros) sem depender de contagens específicas — a API é compartilhada e os números mudam
 test_get_valid_order_id_range aceita 200 ou 404 pois a API pública pode ou não ter o pedido
 test_get_order_id_above_10_returns_404 cobre a regra de negócio da spec: IDs válidos são apenas 1–10
+
+---Quarto Commit : Automação Web (SauceDemo) / Criação de Page Objects---
+Hierarquia de herança:
+
+
+BasePage
+├── LoginPage
+├── InventoryPage      (compõe Header)
+├── CartPage           (compõe Header)
+├── CheckoutStepOnePage (compõe Header)
+├── CheckoutStepTwoPage (compõe Header)
+├── CheckoutCompletePage
+└── Header             (herda BasePage para reuso dos métodos _find/_click)
+Decisões de design por arquivo:
+
+Arquivo	Decisão relevante
+base_page.py	_find usa visibility_of_element_located; _find_clickable usa element_to_be_clickable — esperas corretas para cada caso
+header.py	Componente separado, composto por cada página que o contém — não herança, composição
+login_page.py	Retorna self em cada setter para suportar encadeamento fluente
+inventory_page.py	_slug() converte nome do produto para o padrão data-test da API; sort_by() aceita 'az' | 'za' | 'lohi' | 'hilo'
+cart_page.py	item_prices retorna List[float] já sem o $ — pronto para assertions numéricas
+checkout_page.py	3 classes no mesmo arquivo por coesão de fluxo; fill_buyer_info() como método conveniente com encadeamento; total_matches_subtotal_plus_tax encapsula a validação matemática
+conftest.py	logged_in e cart_with_one_item são fixtures compostas que entregam estado pré-configurado aos testes
