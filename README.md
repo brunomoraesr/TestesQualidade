@@ -89,9 +89,14 @@ cart_page.py	item_prices retorna List[float] já sem o $ — pronto para asserti
 checkout_page.py	3 classes no mesmo arquivo por coesão de fluxo; fill_buyer_info() como método conveniente com encadeamento; total_matches_subtotal_plus_tax encapsula a validação matemática
 conftest.py	logged_in e cart_with_one_item são fixtures compostas que entregam estado pré-configurado aos testes
 
-PRINTS DE TESTES DENTRO DO TERMINAL :
+PRINTS DE TESTES DE LOGIN DENTRO DO TERMINAL :
 <img width="1236" height="604" alt="image" src="https://github.com/user-attachments/assets/1638dbf0-5d80-41fe-a6f5-a7046a7c7ee3" />
-PRINT DO RELATÓRIO HTML GERADO : 
+PRINT DO RELATÓRIO DE LOGIN HTML GERADO : 
 <img width="1896" height="945" alt="image" src="https://github.com/user-attachments/assets/ed729135-f4f5-4dbd-97b4-89d2448382ec" />
 
+
+-------------------------- ------------------------------- --------------------------------- -------------------------------
+QUINTO COMMIT : TESTES E2E ( CHROME ) USANDO AS PAGES OBJECTS CRIADAS NO QUARTO COMMIT
+<img width="1216" height="281" alt="image" src="https://github.com/user-attachments/assets/b360b47f-d944-4ca9-8db6-bab63095d3a2" />
+<img width="1912" height="728" alt="image" src="https://github.com/user-attachments/assets/758675d9-6b7d-461e-bb38-ed394d9e7c86" />
 
