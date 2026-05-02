@@ -90,7 +90,6 @@ class InventoryPage(BasePage):
         Opções válidas: 'az' | 'za' | 'lohi' | 'hilo'
         (A→Z, Z→A, preço crescente, preço decrescente)
         """
-        self._find(self._SORT_DROPDOWN)
         self._select_by_value(self._SORT_DROPDOWN, option)
         return self
 
