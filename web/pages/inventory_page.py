@@ -22,7 +22,7 @@ class InventoryPage(BasePage):
     _PRODUCT_DESC        = (By.CLASS_NAME, "inventory_item_desc")
     _ADD_TO_CART_BUTTONS = (By.CSS_SELECTOR, "[data-test^='add-to-cart']")
     _REMOVE_BUTTONS      = (By.CSS_SELECTOR, "[data-test^='remove']")
-    _SORT_DROPDOWN       = (By.CSS_SELECTOR, "[data-test='product_sort_container']")
+    _SORT_DROPDOWN       = (By.CSS_SELECTOR, "select.product_sort_container")
 
     def __init__(self, driver: WebDriver) -> None:
         super().__init__(driver)
