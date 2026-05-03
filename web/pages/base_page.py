@@ -51,13 +51,18 @@ class BasePage:
         self._driver.execute_script("arguments[0].click();", element)
 
     def _fill(self, locator: Tuple[str, str], text: str) -> None:
-        from selenium.webdriver.common.keys import Keys
         element = self._find(locator)
-        # Ctrl+A + Delete avoids element.clear() which causes React to
-        # re-render the input DOM node, making the element reference stale
-        # and silently dropping send_keys() calls that follow.
-        element.send_keys(Keys.CONTROL + 'a', Keys.DELETE)
-        element.send_keys(text)
+        # React's controlled inputs ignore element.clear() and keyboard
+        # simulations that don't fire the synthetic onChange. Using the
+        # native HTMLInputElement value setter + 'input' event is the only
+        # reliable way to update React state from Selenium.
+        self._driver.execute_script(
+            "Object.getOwnPropertyDescriptor("
+            "window.HTMLInputElement.prototype,'value')"
+            ".set.call(arguments[0],arguments[1]);"
+            "arguments[0].dispatchEvent(new Event('input',{bubbles:true}));",
+            element, text,
+        )
 
     def _select_by_value(self, locator: Tuple[str, str], value: str) -> None:
         from selenium.webdriver.support.ui import Select
