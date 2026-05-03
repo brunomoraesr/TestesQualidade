@@ -22,8 +22,7 @@ Projeto de automação de testes dividido em dois módulos independentes: testes
 - **Python 3.12**
 - **pytest 8.3.5** — runner de testes e gerenciamento de fixtures
 - **requests 2.32** — requisições HTTP para os testes de API
-- **selenium 4.27** — automação do browser para os testes E2E
-- **webdriver-manager 4.0** — download automático do ChromeDriver compatível com a versão instalada do Chrome
+- **selenium 4.27** — automação do browser para os testes E2E (inclui Selenium Manager que baixa o ChromeDriver automaticamente, sem dependência adicional)
 - **pytest-html 4.1** — geração de relatórios HTML
 - **python-dotenv 1.0** — carregamento de variáveis de ambiente via arquivo `.env`
 - **faker 33.1** — geração de dados de teste
@@ -164,7 +163,9 @@ Testa o fluxo completo da loja `https://www.saucedemo.com/` com Selenium e o pad
 
 Cada tela da aplicação possui sua própria classe de Page Object, isolando os seletores CSS e as interações com o Selenium dos testes. Os testes conhecem apenas métodos de negócio como `login()`, `add_to_cart()` e `proceed_to_checkout()`.
 
-A classe `BasePage` é a raiz da hierarquia e centraliza os métodos de localização, ação e navegação. Todos os timeouts usam esperas explícitas via `WebDriverWait` de 20 segundos, evitando o uso de `time.sleep()`. O método `_find_all` retorna lista vazia em vez de lançar exceção quando nenhum elemento é encontrado, permitindo verificações de coleções vazias como carrinho vazio.
+A classe `BasePage` é a raiz da hierarquia e centraliza os métodos de localização, ação e navegação. Todos os timeouts usam esperas explícitas via `WebDriverWait` de 20 segundos, sem `implicitly_wait`. O método `_find_all` retorna lista vazia em vez de lançar exceção quando nenhum elemento é encontrado, permitindo verificações de coleções vazias como carrinho vazio.
+
+O método `_click` usa `execute_script("arguments[0].click()")` em vez do click nativo do Selenium, evitando problemas de coordenadas em Chrome headless. O método `_fill` usa o setter nativo `HTMLInputElement.prototype.value` via JavaScript e dispara o evento `input` com `bubbles: true`, garantindo que inputs controlados pelo React atualizem o estado corretamente — `element.clear()` seguido de `send_keys()` falha silenciosamente em React porque o `clear()` aciona um re-render, tornando a referência ao elemento obsoleta. O método `_select_by_value` usa `presence_of_element_located` em vez de `visibility_of_element_located` porque elementos `<select>` em Chrome headless podem falhar na verificação de visibilidade mesmo estando renderizados.
 
 O componente `Header` é reutilizado por composição nas páginas pós-login, encapsulando o badge contador do carrinho e o menu lateral com logout, reset de estado e navegação ao inventário.
 
@@ -172,11 +173,11 @@ O componente `Header` é reutilizado por composição nas páginas pós-login, e
 
 **LoginPage** — campos de usuário e senha, botão de login, mensagem de erro com botão de fechar, verificação de URL e estado da página.
 
-**InventoryPage** — listagem dos 6 produtos com nome e preço, botão de adicionar ou remover por produto via slug do `data-test`, adição de todos os produtos com re-busca de botões a cada iteração para evitar referências stale, e ordenação por nome e preço via `<select>`.
+**InventoryPage** — listagem dos 6 produtos com nome e preço, botão de adicionar ou remover por produto via slug do `data-test`, adição de todos os produtos com re-busca de botões a cada iteração para evitar referências stale, e ordenação por nome e preço via `<select>` localizado pela classe CSS `select.product_sort_container` (o elemento não possui atributo `data-test` no SauceDemo).
 
 **CartPage** — lista de itens com nome, preço e quantidade, remoção individual ou total, navegação para checkout e retorno ao inventário.
 
-**CheckoutStepOnePage** — formulário com first name, last name e ZIP code, botão Continue com espera inteligente que detecta tanto a navegação para o step dois quanto o aparecimento de mensagem de erro, botão Cancel.
+**CheckoutStepOnePage** — formulário com first name, last name e ZIP code, botão Continue com espera inteligente via `lambda` que detecta tanto a navegação para o step dois quanto o aparecimento de mensagem de erro usando `find_elements` direto (sem `WebDriverWait` aninhado), botão Cancel.
 
 **CheckoutStepTwoPage** — resumo com itens, subtotal, imposto e total, propriedade `total_matches_subtotal_plus_tax` que valida a matemática, botões Finish e Cancel.
 
@@ -249,7 +250,7 @@ Dois jobs rodam em paralelo de forma independente — a falha em um não cancela
 
 **API — Petstore** executa em `ubuntu-latest` com timeout de 15 minutos. Instala Python 3.12 com cache do pip, instala as dependências e roda os testes de API, salvando o relatório `api-test-report` como artefato mesmo em caso de falha (`if: always()`).
 
-**Web E2E — SauceDemo (headless)** executa em `ubuntu-latest` com timeout de 30 minutos. Instala o Chrome via `browser-actions/setup-chrome`, roda os testes com `HEADLESS=true` e `IMPLICIT_WAIT=15` para compensar a latência de runners compartilhados, e salva o relatório `web-test-report` como artefato. Um terceiro artefato com screenshots de falha é gerado condicionalmente com `if: failure()`.
+**Web E2E — SauceDemo (headless)** executa em `ubuntu-latest` com timeout de 30 minutos. Instala o Chrome via `browser-actions/setup-chrome@v1` e o ChromeDriver é baixado automaticamente pelo Selenium Manager embutido no Selenium 4.27. Os testes rodam com `HEADLESS=true` e o relatório `web-test-report` é salvo como artefato. Um terceiro artefato com screenshots de falha é gerado condicionalmente com `if: failure()`.
 
 ### Artefatos
 
