@@ -153,6 +153,8 @@ Por ser uma API de demonstração compartilhada, alguns comportamentos divergem 
 
 Endpoints que retornam 200 em vez de 400 ou 404 para entradas inválidas usam `assert response.status_code in (200, 400)` com comentário explicativo. Operações que a API aceita mas não persiste de fato, como PUT e DELETE de usuários, são marcadas com `@pytest.mark.xfail(strict=False)`, aparecendo como resultado laranja no relatório sem causar falha no pipeline.
 
+Testes que assumem a ausência de um recurso por ID fixo — como `test_get_nonexistent_pet_returns_404`, `test_get_nonexistent_pet_error_message` e `test_delete_nonexistent_pet_returns_404` — também são marcados com `@pytest.mark.xfail(strict=False)`. Como o Petstore é compartilhado entre todos os usuários da internet, o ID `999999999` pode ser criado por terceiros entre execuções, fazendo a API retornar 200 em vez de 404 sem que seja uma falha do projeto.
+
 ---
 
 ## Módulo Web E2E — SauceDemo
