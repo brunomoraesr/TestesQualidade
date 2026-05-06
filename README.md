@@ -141,11 +141,11 @@ Os testes são organizados em três camadas. Na camada de **clientes HTTP**, a c
 
 ### Cobertura dos endpoints
 
-**Pet (`/pet`)** — criar pet com payload válido, buscar por ID existente e inexistente, atualizar e verificar persistência, remover e confirmar ausência, e buscar por status `available`, `pending` e `sold` com `@pytest.mark.parametrize`.
+**Pet (`/pet`)** — criar pet e validar ID e campos retornados, buscar por ID existente, buscar por ID inexistente (xfail — API compartilhada), atualizar e verificar persistência do nome, deletar e confirmar ausência.
 
-**Store (`/store`)** — validar shape da resposta do inventário (dict com valores inteiros), criar pedido e validar campos de retorno, buscar pedido por ID no range válido, remover pedido e confirmar ausência.
+**Store (`/store`)** — criar pedido e validar status `placed`, buscar pedido por ID, buscar pedido inexistente retorna 404, deletar pedido e confirmar ausência.
 
-**User (`/user`)** — criar usuário, buscar por username existente e inexistente, atualizar dados, remover usuário, autenticar e verificar headers `X-Rate-Limit` e `X-Expires-After`, encerrar sessão.
+**User (`/user`)** — criar usuário, buscar por username existente, buscar username inexistente retorna 404, autenticar e verificar mensagem de sessão.
 
 ### Nota sobre o Petstore público
 
@@ -187,13 +187,11 @@ O componente `Header` é reutilizado por composição nas páginas pós-login, e
 
 ### Cenários de teste
 
-**Login (10 testes)** — login válido com redirecionamento confirmado, login inválido com verificação do texto da mensagem de erro, tentativa com usuário bloqueado, envio com campos vazios para validação de obrigatoriedade, e fechamento da mensagem de erro pelo botão X.
+**Login (2 testes)** — login válido com redirecionamento confirmado para o inventário, e login inválido verificando o texto da mensagem de erro.
 
-**Inventário e contador do carrinho (14 testes)** — carga dos 6 produtos com nomes e preços não vazios, ausência do badge antes de adicionar itens, incremento correto do badge de 0 a 6, decremento ao remover, desaparecimento ao remover o único item, e os quatro modos de ordenação verificados com `sorted()` nativo do Python.
+**Inventário (1 teste)** — adicionar item ao carrinho e confirmar que o contador reflete a quantidade correta.
 
-**Carrinho (8 testes)** — item adicionado aparece com preço e quantidade corretos, dois produtos diferentes presentes, remoção de 1 item para esvaziar, remoção de 1 de 2 itens mantendo o outro, e retorno ao inventário pelo Continue Shopping.
-
-**Checkout (13 testes)** — o teste principal percorre o fluxo completo do login até a mensagem "Thank you for your order!" com verificação em cada transição de página. Os demais testes cobrem a validação dos três campos obrigatórios do formulário, a matemática do total, o cancelamento no step dois e a navegação de retorno ao inventário após a confirmação.
+**Checkout (2 testes)** — preencher formulário com first name vazio e confirmar a mensagem de validação; fluxo completo do produto até a mensagem "Thank you for your order!".
 
 ### Fixtures de estado pré-configurado
 
@@ -266,11 +264,10 @@ Nenhuma variável secreta é necessária — o Petstore e o SauceDemo são servi
 
 | Módulo | Arquivo | Testes |
 |---|---|---|
-| API | test_pet.py | 19 |
-| API | test_store.py | 18 |
-| API | test_user.py | 18 |
-| Web | test_login.py | 10 |
-| Web | test_inventory.py | 14 |
-| Web | test_cart.py | 8 |
-| Web | test_checkout.py | 13 |
-| **Total** | | **100** |
+| API | test_pet.py | 5 |
+| API | test_store.py | 4 |
+| API | test_user.py | 4 |
+| Web | test_login.py | 2 |
+| Web | test_inventory.py | 1 |
+| Web | test_checkout.py | 2 |
+| **Total** | | **18** |
