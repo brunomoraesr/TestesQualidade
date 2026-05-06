@@ -46,9 +46,9 @@ TestesQualidade/
 │   │   ├── order_data.json      # Payloads de entrada para testes de Store
 │   │   └── user_data.json       # Payloads de entrada para testes de User
 │   ├── tests/
-│   │   ├── test_pet.py          # 19 testes — CRUD /pet e findByStatus
-│   │   ├── test_store.py        # 18 testes — inventário e pedidos /store
-│   │   └── test_user.py         # 18 testes — CRUD /user, login e logout
+│   │   ├── test_pet.py          #  5 testes — CRUD /pet (caminho feliz + inexistente)
+│   │   ├── test_store.py        #  4 testes — pedidos /store (caminho feliz + inexistente)
+│   │   └── test_user.py         #  4 testes — /user criar, buscar, inexistente e login
 │   └── conftest.py              # Fixtures de API: pet_client, store_client, user_client
 │
 ├── web/                          # Módulo de testes E2E Web (SauceDemo)
@@ -63,10 +63,10 @@ TestesQualidade/
 │   ├── fixtures/
 │   │   └── users.json           # Credenciais e dados de checkout
 │   ├── tests/
-│   │   ├── test_login.py        # 10 testes — login válido, inválido e validações
-│   │   ├── test_inventory.py    # 14 testes — produtos, contador do carrinho e ordenação
-│   │   ├── test_cart.py         #  8 testes — conteúdo e ações do carrinho
-│   │   └── test_checkout.py     # 13 testes — fluxo completo e validações de formulário
+│   │   ├── test_login.py        #  2 testes — login válido e credenciais inválidas
+│   │   ├── test_inventory.py    #  1 teste  — adicionar item ao carrinho
+│   │   ├── test_cart.py         #  (fluxo de carrinho coberto pelo test_checkout.py)
+│   │   └── test_checkout.py     #  2 testes — campo obrigatório vazio e compra completa
 │   └── conftest.py              # Fixtures Web: page objects e estados pré-configurados
 │
 ├── shared/                       # Código compartilhado entre módulos
@@ -202,27 +202,26 @@ A fixture `logged_in` abre o browser, realiza o login e aguarda explicitamente o
 ## Executando os testes
 
 ```bash
-# Todos os testes
-pytest
+# Todos os testes (API + Web)
+python -m pytest
 
 # Por módulo
-pytest api/tests/ -v
-pytest web/tests/ -v
+python -m pytest api/tests/ -v
+python -m pytest web/tests/ -v
 
 # Por arquivo
-pytest api/tests/test_pet.py -v
-pytest web/tests/test_checkout.py -v
+python -m pytest api/tests/test_pet.py -v
+python -m pytest web/tests/test_checkout.py -v
 
 # Por marker
-pytest -m api -v
-pytest -m web -v
-pytest -m smoke -v
+python -m pytest -m api -v
+python -m pytest -m web -v
 
 # Somente o fluxo completo de compra
-pytest web/tests/test_checkout.py::TestCompleteCheckoutFlow::test_full_purchase_flow_confirmation_message -v
+python -m pytest web/tests/test_checkout.py::TestCheckout::test_complete_purchase -v
 
-# Modo headless
-HEADLESS=true pytest web/tests/ -v
+# Modo headless (Windows)
+set HEADLESS=true && python -m pytest web/tests/ -v
 ```
 
 ---
@@ -271,3 +270,37 @@ Nenhuma variável secreta é necessária — o Petstore e o SauceDemo são servi
 | Web | test_inventory.py | 1 |
 | Web | test_checkout.py | 2 |
 | **Total** | | **18** |
+
+---
+
+## Último resultado do CI — 06/05/2026
+
+### Web E2E — 5 passed em 00:00:05
+
+| Resultado | Teste |
+|---|---|
+| Passed | `test_checkout::TestCheckout::test_fill_missing_field_shows_error` |
+| Passed | `test_checkout::TestCheckout::test_complete_purchase` |
+| Passed | `test_inventory::TestInventory::test_add_item` |
+| Passed | `test_login::TestLogin::test_success` |
+| Passed | `test_login::TestLogin::test_invalid_credentials` |
+
+### API — 12 passed, 1 xpassed em 00:00:02
+
+| Resultado | Teste |
+|---|---|
+| XPassed | `test_pet::TestPet::test_get_nonexistent_returns_404` |
+| Passed | `test_pet::TestPet::test_create_returns_200` |
+| Passed | `test_pet::TestPet::test_get_existing_returns_200` |
+| Passed | `test_pet::TestPet::test_update_persists_name` |
+| Passed | `test_pet::TestPet::test_delete_removes_pet` |
+| Passed | `test_store::TestStore::test_place_order_returns_200` |
+| Passed | `test_store::TestStore::test_get_order_returns_200` |
+| Passed | `test_store::TestStore::test_get_nonexistent_order_returns_404` |
+| Passed | `test_store::TestStore::test_delete_order_removes_it` |
+| Passed | `test_user::TestUser::test_create_returns_200` |
+| Passed | `test_user::TestUser::test_get_existing_returns_200` |
+| Passed | `test_user::TestUser::test_get_nonexistent_returns_404` |
+| Passed | `test_user::TestUser::test_login_returns_200` |
+
+> **XPassed** em `test_get_nonexistent_returns_404`: o ID `999999999` não existia no Petstore público nesta execução, então o teste passou (comportamento bônus). Quando outro usuário criar dados nesse ID, o teste volta a ser marcado como `xfail` — em nenhum caso causa falha no pipeline.
